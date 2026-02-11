@@ -3,15 +3,31 @@ on:
   workflow_dispatch:
     inputs:
       java_pack_url:
-        description: 'Java 资源包直链 (例如 4.zip 的 Raw 链接)'
+        description: 'Java 资源包直链'
         required: true
         default: 'https://github.com/AfenLeoht/farmerspack/raw/main/4.zip'
+      block_material:
+        description: '方块材质 (Block Material)'
+        required: true
+        type: choice
+        options:
+          - alpha_test
+          - opaque
+          - blend
+        default: 'alpha_test'
+      attachable_material:
+        description: '附着物材质 (Attachable Material)'
+        required: true
+        type: choice
+        options:
+          - entity_alphatest_one_sided
+          - entity_alphatest
+          - entity_alphablend
+        default: 'entity_alphatest_one_sided'
 
 jobs:
   convert-pack:
     runs-on: ubuntu-latest
-    permissions: 
-      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -30,16 +46,16 @@ jobs:
       - name: Run Converter
         env: 
           PACK_URL: ${{ github.event.inputs.java_pack_url }}
+          B_MAT: ${{ github.event.inputs.block_material }}
+          A_MAT: ${{ github.event.inputs.attachable_material }}
         run: |
           mkdir -p staging
           cp converter.sh staging/
           cd staging
           chmod +x converter.sh
-          # 下载资源包
-          echo "Downloading: $PACK_URL"
           curl -#L -o input_pack.zip "$PACK_URL"
-          # 运行你修改过的 converter.sh
-          ./converter.sh input_pack.zip -w "false" -u "true"
+          # 这里把你的选择传给脚本
+          ./converter.sh input_pack.zip -w "false" -u "true" -b "$B_MAT" -a "$A_MAT"
 
       - name: Upload Results
         uses: actions/upload-artifact@v4
