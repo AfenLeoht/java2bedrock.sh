@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 : ${1?'Please specify an input resource pack in the same directory as the script (e.g. ./converter.sh MyResourcePack.zip)'}
 
+# === 软注入兼容逻辑开始 ===
+status_message process "Injecting namespace compatibility..."
+if [ -d "assets" ]; then
+    # 找到 assets 下第一个不是 minecraft 的文件夹（比如 farmersdelight）
+    # 这样不管你以后换什么模组，它都能自动抓取
+    EXTRA_NS=$(ls assets | grep -v "minecraft" | head -n 1)
+    if [ ! -z "$EXTRA_NS" ]; then
+        status_message info "Detected namespace: $EXTRA_NS. Redirecting to minecraft..."
+        mkdir -p assets/minecraft
+        # 将模组文件夹内容软链接到 minecraft，让脚本后面的硬编码路径全部生效
+        cp -rsf $(pwd)/assets/$EXTRA_NS/* $(pwd)/assets/minecraft/ 2>/dev/null
+    fi
+fi
+# === 软注入兼容逻辑结束 ===
+
 # define color placeholders
 C_RED='\e[31m'
 C_GREEN='\e[32m'
